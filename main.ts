@@ -5,7 +5,7 @@
 // Deterministic: the same line every run, no randomness, no I/O beyond the
 // single output file. Node 22 stdlib only.
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 const FORTUNE =
@@ -33,5 +33,12 @@ if (/[\r\n]/.test(FORTUNE)) {
 
 mkdirSync(dirname(OUTPUT_PATH), { recursive: true });
 writeFileSync(OUTPUT_PATH, FORTUNE, "utf8");
+
+// Verify the write: read the file back and fail fast if the bytes on disk
+// differ from the fortune (guards against a partial or truncated write).
+const written = readFileSync(OUTPUT_PATH, "utf8");
+if (written !== FORTUNE) {
+  fail("read-back mismatch: /output/entry.txt does not match the fortune");
+}
 
 console.log(`wrote ${FORTUNE.length} characters to ${OUTPUT_PATH}`);
